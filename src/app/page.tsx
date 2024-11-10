@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import dynamic from 'next/dynamic';
 
 interface MarketPrices {
   yes: number;
@@ -20,39 +21,49 @@ interface MarketComparison {
   priceDifference: MarketPrices;
 }
 
-export default function Home() {
-  const [comparisons, setComparisons] = useState<MarketComparison[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Create a client-only component
+const ClientOnly = ({ children }: { children: React.ReactNode }) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  if (!mounted) {
+    return <div className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
+      <main className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-8">Loading...</h1>
+      </main>
+    </div>;
+  }
+
+  return <>{children}</>;
+};
+
+function ArbitrageContent() {
+  const [comparisons, setComparisons] = useState<MarketComparison[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    if (mounted) {
-      const fetchComparisons = async () => {
-        try {
-          const response = await fetch('http://localhost:3001/api/arbitrage');
-          if (!response.ok) {
-            throw new Error('Failed to fetch market comparisons');
-          }
-          const data = await response.json();
-          setComparisons(data);
-          setLoading(false);
-        } catch (err) {
-          console.error('Fetch error:', err);
-          setError(err instanceof Error ? err.message : 'An error occurred');
-          setLoading(false);
+    const fetchComparisons = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/arbitrage');
+        if (!response.ok) {
+          throw new Error('Failed to fetch market comparisons');
         }
-      };
+        const data = await response.json();
+        setComparisons(data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+        setLoading(false);
+      }
+    };
 
-      fetchComparisons();
-    }
-  }, [mounted]);
-
-  if (!mounted) return null;
+    fetchComparisons();
+  }, []);
 
   const formatPercentage = (value: number): string => {
     return `${value.toFixed(2)}%`;
@@ -173,5 +184,14 @@ export default function Home() {
         )}
       </main>
     </div>
+  );
+}
+
+// Wrap the main component with ClientOnly
+export default function Home() {
+  return (
+    <ClientOnly>
+      <ArbitrageContent />
+    </ClientOnly>
   );
 }
