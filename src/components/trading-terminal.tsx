@@ -1,8 +1,22 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ChevronDownIcon } from 'lucide-react'
+import { ChevronDownIcon, TrendingDownIcon, TrendingUpIcon } from 'lucide-react'
 import { Menu } from '@headlessui/react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { Badge } from "@/components/ui/badge"
 
 export function TradingTerminalComponent() {
   const [activeItem, setActiveItem] = useState('dashboard')
@@ -17,11 +31,65 @@ export function TradingTerminalComponent() {
     { label: 'ROI', value: '22.5%' },
   ]
 
-  const bettingLines = [
-    { event: 'Match A vs B', yesPercentage: 60, noPercentage: 40, volume: '$50,000' },
-    { event: 'Player X to Score', yesPercentage: 75, noPercentage: 25, volume: '$30,000' },
-    { event: 'Team Y to Win', yesPercentage: 55, noPercentage: 45, volume: '$75,000' },
+  const analysisData = [
+    {
+      title: 'BTC Price > $50k by EOY',
+      polymarket: { yes: '65%', no: '35%' },
+      kalshi: { yes: '62%', no: '38%' },
+      analysis: 'Market sentiment slightly favors BTC reaching $50k. Consider the potential for arbitrage between platforms.',
+      recommendation: 'Buy',
+      trend: 'up',
+    },
+    {
+      title: 'ETH 2.0 Launch in Q3',
+      polymarket: { yes: '40%', no: '60%' },
+      kalshi: { yes: '45%', no: '55%' },
+      analysis: 'Both markets lean towards a delay in ETH 2.0 launch. Monitor development progress for potential shifts.',
+      recommendation: 'Hold',
+      trend: 'neutral',
+    },
+    {
+      title: 'Fed Rate Hike in July',
+      polymarket: { yes: '75%', no: '25%' },
+      kalshi: { yes: '78%', no: '22%' },
+      analysis: 'High confidence in a July rate hike across both platforms. Consider the impact on crypto markets.',
+      recommendation: 'Sell',
+      trend: 'down',
+    },
   ]
+
+  const getTrendColor = (trend) => {
+    switch (trend) {
+      case 'up':
+        return 'text-green-500'
+      case 'down':
+        return 'text-red-500'
+      default:
+        return 'text-gray-500'
+    }
+  }
+
+  const getTrendIcon = (trend) => {
+    switch (trend) {
+      case 'up':
+        return <TrendingUpIcon className="h-4 w-4" />
+      case 'down':
+        return <TrendingDownIcon className="h-4 w-4" />
+      default:
+        return null
+    }
+  }
+
+  const getRecommendationColor = (recommendation) => {
+    switch (recommendation.toLowerCase()) {
+      case 'buy':
+        return 'bg-green-500'
+      case 'sell':
+        return 'bg-red-500'
+      default:
+        return 'bg-yellow-500'
+    }
+  }
 
   return (
     <div className={`bg-black text-white font-sans relative ${showContent ? 'h-auto' : 'min-h-screen'}`}>
@@ -84,28 +152,54 @@ export function TradingTerminalComponent() {
 
             {activeItem === 'analysis' && (
               <div>
-                <h2 className="text-2xl font-bold mb-4">Betting Lines Analysis</h2>
-                <div className="space-y-4">
-                  {bettingLines.map((line, index) => (
-                    <Menu as="div" key={index} className="bg-gray-800 bg-opacity-30 p-4 rounded-lg">
-                      <Menu.Button className="w-full text-left flex justify-between items-center">
-                        <span>{line.event}</span>
-                        <ChevronDownIcon className="w-5 h-5" />
-                      </Menu.Button>
-                      <Menu.Items className="mt-2 space-y-2">
-                        <Menu.Item>
-                          <div>Yes: {line.yesPercentage}%</div>
-                        </Menu.Item>
-                        <Menu.Item>
-                          <div>No: {line.noPercentage}%</div>
-                        </Menu.Item>
-                        <Menu.Item>
-                          <div>Volume: {line.volume}</div>
-                        </Menu.Item>
-                      </Menu.Items>
-                    </Menu>
-                  ))}
-                </div>
+                <h2 className="text-2xl font-bold mb-4">Market Analysis</h2>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[250px]">Trade Title</TableHead>
+                      <TableHead className="text-center">Polymarket (Yes/No)</TableHead>
+                      <TableHead className="text-center">Kalshi (Yes/No)</TableHead>
+                      <TableHead className="text-center">Recommendation</TableHead>
+                      <TableHead className="text-right">Analysis</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {analysisData.map((item, index) => (
+                      <TableRow key={index} className="border-b border-gray-700">
+                        <TableCell className="font-medium flex items-center">
+                          <span className={`mr-2 ${getTrendColor(item.trend)}`}>
+                            {getTrendIcon(item.trend)}
+                          </span>
+                          {item.title}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-green-500">{item.polymarket.yes}</span> / 
+                          <span className="text-red-500">{item.polymarket.no}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-green-500">{item.kalshi.yes}</span> / 
+                          <span className="text-red-500">{item.kalshi.no}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge className={`${getRecommendationColor(item.recommendation)}`}>
+                            {item.recommendation}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Collapsible>
+                            <CollapsibleTrigger className="flex items-center justify-end w-full">
+                              View Analysis
+                              <ChevronDownIcon className="ml-2 h-4 w-4" />
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-2 text-sm text-gray-400">
+                              {item.analysis}
+                            </CollapsibleContent>
+                          </Collapsible>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </div>
